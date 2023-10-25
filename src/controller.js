@@ -11,6 +11,31 @@ class LibroController {
     }
   }
 
+  async getOne(req, res) {
+    try {
+      const libroId = req.params.id;
+  
+      // Validación de datos
+      if (!libroId) {
+        return res.status(400).json({ error: 'Falta el parámetro "id" en la solicitud' });
+      }
+  
+      // Realiza la consulta para obtener el libro por su "id"
+      const [result] = await pool.query('SELECT * FROM Libros WHERE id = ?', [libroId]);
+  
+      // Verifica si se encontró un libro con el "id" proporcionado
+      if (result.length === 0) {
+        return res.status(404).json({ error: 'No se encontró ningún libro con el ID proporcionado' });
+      }
+  
+      res.json(result[0]); // Devuelve el libro encontrado
+    } catch (error) {
+      console.error('Error al obtener un libro por ID:', error);
+      res.status(500).json({ error: 'Hubo un error al obtener el libro por ID' });
+    }
+  }
+  
+
   async add(req, res) {
     try {
       const libro = req.body;
