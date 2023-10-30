@@ -79,7 +79,30 @@ class LibroController {
       res.status(500).json({ error: 'Hubo un error al eliminar el libro' });
     }
   }
-
+  async deleteByISBN(req, res) {
+    try {
+      const ISBN = req.params.ISBN; // Obtiene el ISBN de los parámetros
+  
+      // Validación de datos antes de eliminar por ISBN
+      if (!ISBN) {
+        return res.status(400).json({ error: 'Falta el parámetro "ISBN" en la solicitud' });
+      }
+  
+      // Comprueba si el libro con el ISBN proporcionado existe antes de eliminar
+      const [checkResult] = await pool.query('SELECT ISBN FROM Libros WHERE ISBN=?', [ISBN]);
+  
+      if (checkResult.length === 0) {
+        return res.status(404).json({ error: 'No se encontró ningún libro con el ISBN proporcionado' });
+      }
+  
+      const [result] = await pool.query('DELETE FROM Libros WHERE ISBN=?', [ISBN]);
+      res.json({ "Registros eliminados": result.affectedRows });
+    } catch (error) {
+      console.error('Error al eliminar un libro por ISBN:', error);
+      res.status(500).json({ error: 'Hubo un error al eliminar el libro por ISBN' });
+    }
+  }
+  
   async update(req, res) {
     try {
       const libro = req.body;
@@ -97,7 +120,30 @@ class LibroController {
     }
   }
 
- 
+  async updateByISBN(req, res) {
+    try {
+      const libro = req.body;
+  
+      // Validación de datos antes de actualizar
+      if (!libro.ISBN || !libro.nombre || !libro.autor || !libro.categoria || !libro.año_publicacion) {
+        return res.status(400).json({ error: 'Faltan atributos en la solicitud' });
+      }
+  
+      // Realiza la actualización del libro por su ISBN
+      const [result] = await pool.query('UPDATE Libros SET nombre=?, autor=?, categoria=?, año_publicacion=? WHERE ISBN=?', [libro.nombre, libro.autor, libro.categoria, libro.año_publicacion, libro.ISBN]);
+  
+      // Verifica si se actualizó algún libro
+      if (result.changedRows === 0) {
+        return res.status(404).json({ error: 'No se encontró ningún libro con el ISBN proporcionado' });
+      }
+  
+      res.json({ "Registros actualizados": result.changedRows });
+    } catch (error) {
+      console.error('Error al actualizar un libro por ISBN:', error);
+      res.status(500).json({ error: 'Hubo un error al actualizar el libro por ISBN' });
+    }
+  }
+  
 }
 
 export const libro = new LibroController();
